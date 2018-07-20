@@ -1,0 +1,134 @@
+(PUSH_NEXT_INSTRUCTION_WORD_AS_DATA)
+(JMP_IF_FALSE)
+(JMP)
+
+while:
+:while
+do
+if:
+:if
+:else:
+
+-- both
+
+CALLOC      // size --
+WALLOC      // size --
+!           // addr val --
+c!          // addr val --
+@           // addr -- val
+c@          // addr -- val
+dup         // val -- val val
+accept()    // addr len --
+tokenize()  // addr val --
+print()     // addr --
+println()   // addr --
+evaluate()  // addr --
+parseNumber()   // str -- value 1 or 0
+find()      // strAddr -- word bool 1 or 0
+strEqual()  // strAddr strAddr -- bool
+"
+compileTOS()
+compile:
+parseString()
+beginCompileNewWord()   //  strAddr --
+endCompileNewWord()
+clearTib()
+
+-----------------------------
+256 CALLOC tib
+tib 0 c!
+1 WALLOC token
+1 CALLOC keepRunningCommandLineInterp
+keepRunningCommandLineInterp 1 c!
+
+/* return the length of a null terminated string */
+: strLength() // addr -- length
+	dup
+	while: dup c@ != 0 do
+		1 +
+	:while
+	swap -
+;
+
+: nextToken()
+    token ((token @) + (token @ strLength())) !
+;
+
+: MAX_INPUT_LENGTH 255 ;
+
+: readTokens()
+	tib MAX_INPUT_LENGTH accept()
+	tib 32 tokenize()
+	token tib !
+;
+
+: clearTib()
+    tib 0 c!
+    token tib !
+;
+
+: commandLineInterp
+    while: keepRunningCommandLineInterp @ do
+        token @ strLength() == 0 if:
+			readTokens()
+		:if
+		token @ find() if:
+			nextToken()
+		    drop
+			evaluate()
+		:else:
+			parseNumber() if:
+				nextToken()
+			:else:
+				token @ print()
+				" ?" println()
+				clearTib()
+			:if
+		:if
+	:while
+;
+
+: :
+    0
+    compileWord();
+;
+
+: :Immediate
+    1
+    compileWord()
+;
+
+: compileWord
+    beginCompileNewWord()
+    nextToken()
+    while: token @ c@ do
+        token @ find() if:
+            if: //immediate word
+                evaluate();
+            :else:
+                compileTOS()
+            :if
+        :else:
+            token @ parseNumber() if:
+                compile: (PUSH_NEXT_INSTRUCTION_WORD_AS_DATA)
+                compileTOS()
+            :else:
+                token @ parseString() if:
+                    compile: (PUSH_NEXT_INSTRUCTION_WORD_AS_DATA)
+                    compileTOS()
+                :else:
+                    // word not a literal or found in dictionary
+                    token @ print()
+                    " ?" println()
+                    clearTib()
+                :if
+            :if
+        :if
+        nextToken()
+    :while
+    endCompileNewWord()
+;
+
+
+
+
