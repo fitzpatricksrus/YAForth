@@ -1,44 +1,69 @@
-(PUSH_NEXT_INSTRUCTION_WORD_AS_DATA)
-(JMP_IF_FALSE)
-(JMP)
-
-while:
-:while
-do
-if:
-:if
-:else:
-
--- both
-
-CALLOC      // size --
-WALLOC      // size --
-!           // addr val --
-c!          // addr val --
-@           // addr -- val
-c@          // addr -- val
-dup         // val -- val val
-accept()    // addr len --
-tokenize()  // addr val --
-print()     // addr --
-println()   // addr --
-evaluate()  // addr --
-parseNumber()   // str -- value 1 or 0
-find()      // strAddr -- word bool 1 or 0
-strEqual()  // strAddr strAddr -- bool
-"
-compileTOS()
-compile:
-parseString()
-beginCompileNewWord()   //  strAddr --
-endCompileNewWord()
-clearTib()
+:P >r
+:P pick
+: dup 1 pick ;
+:P @
+:P rot
+: swap 1 rot ;
+:P +
+:P r>
+:P compileTOS()
+: compile: >r dup @ swap 1 + r> compileTOS() ;
+:P compilerPosition()
+:I while: compilerPosition() ;
+:P (JMP_IF_FALSE)
+:P (NOP)
+:I do compile: (JMP_IF_FALSE) compilerPosition() compile: (NOP) ;
+:P (JMP)
+: compileJumpTo()           // where to jump to ---
+    compile: (JMP) compilerPosition() 1 + - compileTOS()
+;
+: compileJumpFrom()                // where to jump from to current pos
+    dup compilerPosition() swap - swap !
+;
+:I :while   // whilePos exitJmpPos
+    swap    // exitJmpPos whilePos
+    compileJumpTo()     // jump to while condition
+    compileJumpFrom()   // jump from jmp-if-false
+;
+:I if:
+     compile: JMP_IF_FALSE
+;
+:I :if
+    compileJumpFrom()   // jump from jmp-if-false
+;
+:I :else:
+    compile: (JMP)
+    compilerPosition()
+    compile: (NOP)
+    swap
+    compileJumpFrom()
+;
+:P :char
+:P :word
+:P :c[]
+:P :w[]
+:P !           // addr val --
+:P c!          // addr val --
+:P @           // addr -- val
+:P c@          // addr -- val
+:P accept()    // addr len --
+:P tokenize()  // addr val --
+:P print()     // addr --
+:P println()   // addr --
+:P evaluate()  // addr --
+:P parseNumber()   // str -- value 1 or 0
+:P find()      // strAddr -- word bool 1 or 0
+:P beginCompileNewWord()            //  strAddr --
+:P endCompileNewWord()
+:P abortCompileNewWord()
+:P parseString()
+:P clearTib()
 
 -----------------------------
-256 CALLOC tib
+:c[] tib 256 ;
 tib 0 c!
-1 WALLOC token
-1 CALLOC keepRunningCommandLineInterp
+:word token ;
+:char keepRunningCommandLineInterp ;
 keepRunningCommandLineInterp 1 c!
 
 /* return the length of a null terminated string */
@@ -93,11 +118,12 @@ keepRunningCommandLineInterp 1 c!
     compileWord();
 ;
 
-: :Immediate
+: :I
     1
     compileWord()
 ;
 
+:P (PUSH_NEXT_INSTRUCTION_WORD_AS_DATA)
 : compileWord
     beginCompileNewWord()
     nextToken()
@@ -121,6 +147,7 @@ keepRunningCommandLineInterp 1 c!
                     token @ print()
                     " ?" println()
                     clearTib()
+                    abortCompileNewWord()
                 :if
             :if
         :if
