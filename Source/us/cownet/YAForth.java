@@ -8,7 +8,7 @@ package us.cownet;
 
  */
 
-public class YAForth implements ForthThread.ThreadContext, ForthThread.ThreadMemory {
+public class YAForth implements ThreadExecutionContext, ThreadMemory {
 	private int data[];
 	private boolean isRunning;
 	private ForthThread thread;
@@ -30,6 +30,31 @@ public class YAForth implements ForthThread.ThreadContext, ForthThread.ThreadMem
 	@Override
 	public void setWord(int location, int value) {
 		data[location] = value;
+	}
+
+	@Override
+	public void pushData(int value) {
+
+	}
+
+	@Override
+	public int popData() {
+		return 0;
+	}
+
+	@Override
+	public int peekData(int location) {
+		return 0;
+	}
+
+	@Override
+	public void pushReturn(int value) {
+
+	}
+
+	@Override
+	public int popReturn() {
+		return 0;
 	}
 
 	public void buildMemory() {
