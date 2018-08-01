@@ -85,14 +85,13 @@ public enum Instruction {
 		public void execute(Architecture architecture) {
 			int jmpOffset = architecture.getNextInstruction();
 			if (architecture.popData() == 0) {
-				architecture.setIP(architecture.getIP() + jmpOffset);
+				architecture.bumpIP(jmpOffset);
 			}
 		}
 	},
 	JMP {
 		public void execute(Architecture architecture) {
-			int jmpOffset = architecture.getNextInstruction();
-			architecture.setIP(architecture.getIP() + jmpOffset);
+			architecture.bumpIP(architecture.getNextInstruction());
 		}
 	},
 	COMPILE {

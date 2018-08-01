@@ -5,5 +5,9 @@ public interface ThreadExecutionContext {
 
 	void setIP(int newIP);
 
+	default void bumpIP(int offset) {
+		setIP(getIP() + offset);
+	}
+
 	int getNextInstruction();
 }

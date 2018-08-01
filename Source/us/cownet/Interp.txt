@@ -64,7 +64,7 @@
 
 :P c@          // addr -- val
 :P !=
-/* return the length of a null terminated string */
+// return the length of a null terminated string
 : strLength() // addr -- length
 	dup
 	while: dup c@ != 0 do
